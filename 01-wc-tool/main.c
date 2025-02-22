@@ -32,7 +32,6 @@ long int get_file_size(FILE *f)
 long int count_lines(FILE *f)
 {
     long int lines = 0;
-    char c;
     for (char c = fgetc(f); c != EOF; c = fgetc(f))
     {
         if (c == '\n')
@@ -180,7 +179,6 @@ void execute(struct FileStat *fs)
 
 int main(int argc, char *argv[])
 {
-    int opt;
     struct FileStat fs = {"", "", NULL, 0, 0, 0, 0};
 
     setlocale(LC_ALL, "en_US.UTF-8"); // set locale to UTF-8

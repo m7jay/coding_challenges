@@ -5,6 +5,7 @@
 *.a
 *.so
 *.dll
+main
 
 # Debug files
 *.dSYM/
