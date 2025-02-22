@@ -1,0 +1,55 @@
+# Compiled object files and binaries
+*.o
+*.out
+*.exe
+*.a
+*.so
+*.dll
+
+# Debug files
+*.dSYM/
+*.gch
+*.gcda
+*.gcno
+*.gcov
+
+# Build directories
+/build/
+/bin/
+/obj/
+/lib/
+
+# Dependency files
+*.d
+*.deps
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*.swo
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+
+# ctags
+tags
+TAGS
+
+# Makefile generated files
+Makefile.in
+/configure
+/config.log
+/config.status
+/config.h
+/config.h.in
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
