@@ -7,17 +7,11 @@
 #include <locale.h>
 #include <wchar.h>
 
-#define use(x) (void)(x)
-
 struct FileStat
 {
     char filename[128];
     char options[8];
     FILE *file;
-    long int bytes;
-    long int lines;
-    long int words;
-    long int characters;
 };
 
 long int get_file_size(FILE *f)
@@ -157,20 +151,16 @@ void execute(struct FileStat *fs)
         switch (fs->options[i])
         {
         case 'c':
-            fs->bytes = get_file_size(fs->file);
-            printf("%ld\t", fs->bytes);
+            printf("%ld\t", get_file_size(fs->file));
             break;
         case 'l':
-            fs->lines = count_lines(fs->file);
-            printf("%ld\t", fs->lines);
+            printf("%ld\t", count_lines(fs->file));
             break;
         case 'w':
-            fs->words = count_words(fs->file);
-            printf("%ld\t", fs->words);
+            printf("%ld\t", count_words(fs->file));
             break;
         case 'm':
-            fs->characters = count_chars(fs->file);
-            printf("%ld\t", fs->characters);
+            printf("%ld\t", count_chars(fs->file));
             break;
         }
     }
@@ -179,7 +169,7 @@ void execute(struct FileStat *fs)
 
 int main(int argc, char *argv[])
 {
-    struct FileStat fs = {"", "", NULL, 0, 0, 0, 0};
+    struct FileStat fs = {"", "", NULL};
 
     setlocale(LC_ALL, "en_US.UTF-8"); // set locale to UTF-8
     get_input(argc, argv, &fs);
