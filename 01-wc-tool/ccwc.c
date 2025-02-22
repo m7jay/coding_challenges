@@ -9,18 +9,20 @@
 
 #define use(x) (void)(x)
 
-struct word_count
+struct FileStat
 {
+    char filename[128];
+    char options[8];
     FILE *file;
     long int bytes;
     long int lines;
     long int words;
     long int characters;
-    char options[16];
 };
 
 long int get_file_size(FILE *f)
 {
+    fseek(f, 0L, SEEK_SET);
     fseek(f, 0L, SEEK_END);
     long int res = ftell(f);
     fseek(f, 0L, SEEK_SET);
@@ -76,94 +78,118 @@ long int count_chars(FILE *f)
     return count;
 }
 
-int main(int argc, char *argv[])
+void init_file(struct FileStat *fs)
+{
+    fs->file = fopen(fs->filename, "r, ccs=UTF-8"); // open utf-8 file in read mode
+    if (fs->file == NULL)
+    {
+        printf("File not found: %s\n", fs->filename);
+        exit(EXIT_FAILURE);
+    }
+
+    if (fwide(fs->file, 1) < 0) // set file orientation to wide char to support multibyte characters
+    {
+        printf("Error setting file orientation\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void get_input(int argc, char *argv[], struct FileStat *fs)
 {
     int opt;
-    struct word_count wc;
+    if (argc < 2)
+    {
+        printf("Usage: %s [-c file] [-l file] [-w file] [-m file]\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
 
     if (argc == 2)
     {
-        setlocale(LC_ALL, "en_US.UTF-8");
-        wc.file = fopen(argv[1], "r, ccs=UTF-8");
-        if (wc.file == NULL)
-        {
-            printf("File not found\n");
-            exit(EXIT_FAILURE);
-        }
-        if (fwide(wc.file, 1) < 0)
-        {
-            printf("Error setting file orientation\n");
-            exit(EXIT_FAILURE);
-        }
-        wc.bytes = get_file_size(wc.file);
-        wc.lines = count_lines(wc.file);
-        wc.words = count_words(wc.file);
-        wc.characters = count_chars(wc.file);
+        strncpy(fs->filename, argv[1], strlen(argv[1]));
+        strcpy(fs->options, "clwm");
         printf("bytes\tlines\twords\tcharacter\n");
-        printf("%ld\t%ld\t%ld\t%ld\n", wc.bytes, wc.lines, wc.words, wc.characters);
     }
     else
     {
+        int idx = 0;
+        strcpy(fs->options, "");
         while ((opt = getopt(argc, argv, "c:l:w:m:")) != -1)
         {
+            if (fs->filename[0] == '\0' && optarg)
+                strncpy(fs->filename, optarg, strlen(optarg));
+
             switch (opt)
             {
             case 'c':
-                wc.file = fopen(optarg, "r, ccs=UTF-8");
-                if (wc.file == NULL)
-                {
-                    printf("File not found\n");
-                    exit(EXIT_FAILURE);
-                }
-                wc.bytes = get_file_size(wc.file);
-                printf("Number of bytes: %ld\n", wc.bytes);
+                fs->options[idx] = 'c';
+                printf("bytes\t");
                 break;
             case 'l':
-                wc.file = fopen(optarg, "r, ccs=UTF-8");
-                if (wc.file == NULL)
-                {
-                    printf("File not found\n");
-                    exit(EXIT_FAILURE);
-                }
-                use(optarg);
-
-                wc.lines = count_lines(wc.file);
-                printf("Number of lines: %ld\n", wc.lines);
+                fs->options[idx] = 'l';
+                printf("lines\t");
                 break;
             case 'w':
-                wc.file = fopen(optarg, "r, ccs=UTF-8");
-                if (wc.file == NULL)
-                {
-                    printf("File not found\n");
-                    exit(EXIT_FAILURE);
-                }
-                wc.words = count_words(wc.file);
-                printf("Number of words: %ld\n", wc.words);
+                fs->options[idx] = 'w';
+                printf("words\t");
                 break;
             case 'm':
-                setlocale(LC_ALL, "en_US.UTF-8");
-                wc.file = fopen(optarg, "r, ccs=UTF-8");
-                if (wc.file == NULL)
-                {
-                    printf("File not found\n");
-                    exit(EXIT_FAILURE);
-                }
-                if (fwide(wc.file, 1) < 0)
-                {
-                    printf("Error setting file orientation\n");
-                    exit(EXIT_FAILURE);
-                }
-                wc.characters = count_chars(wc.file);
-                printf("Number of characters: %ld\n", wc.characters);
+                fs->options[idx] = 'm';
+                printf("character\t");
                 break;
             default:
                 printf("Usage: %s [-c file] [-l file] [-w file] [-m file]\n", argv[0]);
-                break;
+                exit(EXIT_FAILURE);
             }
+            idx++;
+        }
+        printf("\n");
+    }
+
+    if (fs->filename[0] == '\0')
+    {
+        printf("Usage: %s [-c file] [-l file] [-w file] [-m file]\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+}
+void execute(struct FileStat *fs)
+{
+    for (int i = 0; i < strlen(fs->options); i++)
+    {
+        switch (fs->options[i])
+        {
+        case 'c':
+            fs->bytes = get_file_size(fs->file);
+            printf("%ld\t", fs->bytes);
+            break;
+        case 'l':
+            fs->lines = count_lines(fs->file);
+            printf("%ld\t", fs->lines);
+            break;
+        case 'w':
+            fs->words = count_words(fs->file);
+            printf("%ld\t", fs->words);
+            break;
+        case 'm':
+            fs->characters = count_chars(fs->file);
+            printf("%ld\t", fs->characters);
+            break;
         }
     }
-    if (wc.file)
-        fclose(wc.file);
+    printf("\n");
+}
+
+int main(int argc, char *argv[])
+{
+    int opt;
+    struct FileStat fs = {"", "", NULL, 0, 0, 0, 0};
+
+    setlocale(LC_ALL, "en_US.UTF-8"); // set locale to UTF-8
+    get_input(argc, argv, &fs);
+
+    init_file(&fs);
+    execute(&fs);
+    if (fs.file)
+        fclose(fs.file);
 
     return EXIT_SUCCESS;
 }
